@@ -40,6 +40,9 @@ export default function newWorker(
       await fetchWeb3Transactions(web3Conn, project.mintAddress, {
         limit: 30,
         async onTransaction(tx) {
+          if (!tx.meta?.err) {
+            return;
+          }
           const nftMint = parseNFTMintOnTx(tx);
           if (!nftMint) {
             return;
