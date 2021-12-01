@@ -1,6 +1,6 @@
 export interface Subscription {
   discordChannelId: string;
-  type: "NFTSale";
+  type: "NFTSale" | "NFTMint";
   mintAddress: string;
 }
 export interface Config {
@@ -34,6 +34,17 @@ export function loadConfig(): MutableConfig {
     });
   }
 
+  if (
+    process.env.SUBSCRIPTION_DISCORD_MINT_CHANNEL_ID &&
+    process.env.SUBSCRIPTION_NFT_MINT_ADDRESS &&
+    process.env.SUBSCRIPTION_NFT_MINT_TOKEN_SALE_PROGRAM_ID
+  ) {
+    config.subscriptions.push({
+      type: "NFTMint",
+      discordChannelId: process.env.SUBSCRIPTION_DISCORD_MINT_CHANNEL_ID,
+      mintAddress: process.env.SUBSCRIPTION_NFT_MINT_ADDRESS,
+    });
+  }
   return {
     ...config,
     async setSubscriptions(subscriptions: Subscription[]): Promise<void> {

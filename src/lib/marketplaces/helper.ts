@@ -5,11 +5,12 @@ import { LamportPerSOL } from "../solana";
 export function getTransfersFromInnerInstructions(
   innerInstructions: any
 ): Transfer[] {
+  console.log(innerInstructions);
   if (!innerInstructions) {
     return [];
   }
   const instructions = innerInstructions.instructions as ParsedInstruction[];
-  if (!instructions[0]?.parsed) {
+  if (!instructions[1]?.parsed) {
     return [];
   }
 

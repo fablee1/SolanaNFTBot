@@ -7,6 +7,7 @@ import { getStatus } from "lib/discord/notifyDiscordSale";
 import { loadConfig } from "config";
 import { Worker } from "workers/types";
 import notifyNFTSalesWorker from "workers/notifyNFTSalesWorker";
+import notifyNFTMintWorker from "workers/notifyNFTMintWorker";
 
 const port = process.env.PORT || 4000;
 
@@ -47,10 +48,17 @@ const port = process.env.PORT || 4000;
     const web3Conn = newConnection();
 
     const workers: Worker[] = config.subscriptions.map((s) => {
-      return notifyNFTSalesWorker(discordClient, web3Conn, {
-        discordChannelId: s.discordChannelId,
-        mintAddress: s.mintAddress,
-      });
+      if (s.type === "NFTSale") {
+        return notifyNFTSalesWorker(discordClient, web3Conn, {
+          discordChannelId: s.discordChannelId,
+          mintAddress: s.mintAddress,
+        });
+      } else {
+        return notifyNFTMintWorker(discordClient, web3Conn, {
+          discordChannelId: s.discordChannelId,
+          mintAddress: s.mintAddress,
+        });
+      }
     });
 
     initWorkers(workers);

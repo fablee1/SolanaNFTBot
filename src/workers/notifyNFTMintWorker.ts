@@ -2,9 +2,9 @@ import Discord, { TextChannel } from "discord.js";
 import { Worker } from "./types";
 import { Connection } from "@solana/web3.js";
 import { fetchWeb3Transactions } from "lib/solana/connection";
-import { parseNFTSale } from "lib/marketplaces";
+import { parseNFTMintOnTx } from "lib/mint/parseNFTMint";
 import { fetchNFTData } from "lib/solana/NFTData";
-import notifyDiscordSale from "lib/discord/notifyDiscordSale";
+import notifyDiscordMint from "lib/discord/notifyDiscordMint";
 
 export interface Project {
   mintAddress: string;
@@ -40,30 +40,31 @@ export default function newWorker(
       await fetchWeb3Transactions(web3Conn, project.mintAddress, {
         limit: 30,
         async onTransaction(tx) {
-          const nftSale = parseNFTSale(tx);
-          if (!nftSale) {
+          const nftMint = parseNFTMintOnTx(tx);
+          if (!nftMint) {
             return;
           }
           // Don't notify purchases by the project's own account
-          if (nftSale.buyer === project.mintAddress) {
+          if (nftMint.minter === project.mintAddress) {
             return;
           }
-          if (nftSale.soldAt <= notifyAfter) {
+
+          if (nftMint.mintedAt <= notifyAfter) {
             // ignore transactions before the last notify or last online time
             return false;
           }
 
-          const nftData = await fetchNFTData(web3Conn, nftSale.token);
+          const nftData = await fetchNFTData(web3Conn, nftMint.token);
           if (!nftData) {
             return;
           }
 
-          nftSale.nftData = nftData;
+          nftMint.nftData = nftData;
 
-          await notifyDiscordSale(discordClient, channel, nftSale);
+          await notifyDiscordMint(discordClient, channel, nftMint);
 
-          if (nftSale.soldAt > lastNotified) {
-            lastNotified = nftSale.soldAt;
+          if (nftMint.mintedAt > lastNotified) {
+            lastNotified = nftMint.mintedAt;
           }
         },
       });
